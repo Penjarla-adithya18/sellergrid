@@ -22,20 +22,155 @@ const themeCounts = {
   "Wrong Item": 83
 };
 
+const assignees = ["Unassigned", "Support Team", "Logistics Team", "Catalog Team", "Support Lead"];
+
 const platforms = ["Amazon", "Flipkart", "Myntra"];
 let activeTheme = "";
+let autoRefreshTimer = null;
+let selectedInboxIds = new Set();
+let auditTrail = [];
 
 let reviews = [
-  { id: "RV-32918", platform: "Amazon", rating: 1, issue: "Packaging Damage", text: "Received damaged packaging twice", sku: "SNK-441", severity: "Critical", sla: "3h 18m", sentiment: "Negative" },
-  { id: "RV-33102", platform: "Flipkart", rating: 2, issue: "Size / Fit Issue", text: "Size chart mismatch, had to return", sku: "TSH-108", severity: "Product Gap", sla: "7h 02m", sentiment: "Negative" },
-  { id: "RV-33444", platform: "Myntra", rating: 2, issue: "Late Delivery", text: "Good product, delivery experience was poor", sku: "KET-210", severity: "Win-Back", sla: "12h 44m", sentiment: "Neutral" },
-  { id: "RV-33518", platform: "Amazon", rating: 1, issue: "Defective Unit", text: "Stopped working after one day", sku: "MIX-904", severity: "Critical", sla: "2h 09m", sentiment: "Negative" },
-  { id: "RV-33572", platform: "Flipkart", rating: 4, issue: "Late Delivery", text: "Bit late but product quality is good", sku: "KET-210", severity: "Win-Back", sla: "15h 10m", sentiment: "Positive" },
-  { id: "RV-33620", platform: "Amazon", rating: 5, issue: "General Praise", text: "Very happy with quality", sku: "JAR-018", severity: "Low", sla: "N/A", sentiment: "Positive" },
-  { id: "RV-33641", platform: "Myntra", rating: 1, issue: "Wrong Item", text: "Completely different item delivered", sku: "TOP-555", severity: "Critical", sla: "4h 31m", sentiment: "Negative" },
-  { id: "RV-33678", platform: "Amazon", rating: 3, issue: "Color Mismatch", text: "Color is different from listing", sku: "TSH-108", severity: "Product Gap", sla: "9h 40m", sentiment: "Neutral" },
-  { id: "RV-33731", platform: "Flipkart", rating: 2, issue: "Packaging Damage", text: "Outer box broken on arrival", sku: "BOT-305", severity: "Critical", sla: "5h 12m", sentiment: "Negative" },
-  { id: "RV-33793", platform: "Myntra", rating: 5, issue: "General Praise", text: "Great fit and quick delivery", sku: "TSH-108", severity: "Low", sla: "N/A", sentiment: "Positive" }
+  {
+    id: "RV-32918",
+    platform: "Amazon",
+    rating: 1,
+    issue: "Packaging Damage",
+    text: "Received damaged packaging twice",
+    sku: "SNK-441",
+    severity: "Critical",
+    sla: "3h 18m",
+    sentiment: "Negative",
+    assignee: "Support Lead",
+    status: "Open",
+    confidence: 96
+  },
+  {
+    id: "RV-33102",
+    platform: "Flipkart",
+    rating: 2,
+    issue: "Size / Fit Issue",
+    text: "Size chart mismatch, had to return",
+    sku: "TSH-108",
+    severity: "Product Gap",
+    sla: "7h 02m",
+    sentiment: "Negative",
+    assignee: "Catalog Team",
+    status: "Open",
+    confidence: 91
+  },
+  {
+    id: "RV-33444",
+    platform: "Myntra",
+    rating: 2,
+    issue: "Late Delivery",
+    text: "Good product, delivery experience was poor",
+    sku: "KET-210",
+    severity: "Win-Back",
+    sla: "12h 44m",
+    sentiment: "Neutral",
+    assignee: "Support Team",
+    status: "In Progress",
+    confidence: 84
+  },
+  {
+    id: "RV-33518",
+    platform: "Amazon",
+    rating: 1,
+    issue: "Defective Unit",
+    text: "Stopped working after one day",
+    sku: "MIX-904",
+    severity: "Critical",
+    sla: "2h 09m",
+    sentiment: "Negative",
+    assignee: "Support Lead",
+    status: "Open",
+    confidence: 94
+  },
+  {
+    id: "RV-33572",
+    platform: "Flipkart",
+    rating: 4,
+    issue: "Late Delivery",
+    text: "Bit late but product quality is good",
+    sku: "KET-210",
+    severity: "Win-Back",
+    sla: "15h 10m",
+    sentiment: "Positive",
+    assignee: "Support Team",
+    status: "Resolved",
+    confidence: 82
+  },
+  {
+    id: "RV-33620",
+    platform: "Amazon",
+    rating: 5,
+    issue: "General Praise",
+    text: "Very happy with quality",
+    sku: "JAR-018",
+    severity: "Low",
+    sla: "N/A",
+    sentiment: "Positive",
+    assignee: "Unassigned",
+    status: "Open",
+    confidence: 76
+  },
+  {
+    id: "RV-33641",
+    platform: "Myntra",
+    rating: 1,
+    issue: "Wrong Item",
+    text: "Completely different item delivered",
+    sku: "TOP-555",
+    severity: "Critical",
+    sla: "4h 31m",
+    sentiment: "Negative",
+    assignee: "Logistics Team",
+    status: "Open",
+    confidence: 93
+  },
+  {
+    id: "RV-33678",
+    platform: "Amazon",
+    rating: 3,
+    issue: "Color Mismatch",
+    text: "Color is different from listing",
+    sku: "TSH-108",
+    severity: "Product Gap",
+    sla: "9h 40m",
+    sentiment: "Neutral",
+    assignee: "Catalog Team",
+    status: "In Progress",
+    confidence: 86
+  },
+  {
+    id: "RV-33731",
+    platform: "Flipkart",
+    rating: 2,
+    issue: "Packaging Damage",
+    text: "Outer box broken on arrival",
+    sku: "BOT-305",
+    severity: "Critical",
+    sla: "5h 12m",
+    sentiment: "Negative",
+    assignee: "Logistics Team",
+    status: "Open",
+    confidence: 90
+  },
+  {
+    id: "RV-33793",
+    platform: "Myntra",
+    rating: 5,
+    issue: "General Praise",
+    text: "Great fit and quick delivery",
+    sku: "TSH-108",
+    severity: "Low",
+    sla: "N/A",
+    sentiment: "Positive",
+    assignee: "Unassigned",
+    status: "Open",
+    confidence: 78
+  }
 ];
 
 const state = {
@@ -71,13 +206,17 @@ const elements = {
   clearReplyBtn: document.getElementById("clearReplyBtn"),
   inboxSearch: document.getElementById("inboxSearch"),
   inboxRating: document.getElementById("inboxRating"),
+  selectAllInbox: document.getElementById("selectAllInbox"),
   inboxTable: document.getElementById("inboxTable"),
+  bulkAssignBtn: document.getElementById("bulkAssignBtn"),
+  bulkResolveBtn: document.getElementById("bulkResolveBtn"),
   sentimentBars: document.getElementById("sentimentBars"),
   clusterList: document.getElementById("clusterList"),
   templateSelect: document.getElementById("templateSelect"),
   responseStudioEditor: document.getElementById("responseStudioEditor"),
   applyTemplateBtn: document.getElementById("applyTemplateBtn"),
   copyStudioBtn: document.getElementById("copyStudioBtn"),
+  qualityCheckList: document.getElementById("qualityCheckList"),
   saveRoutingBtn: document.getElementById("saveRoutingBtn"),
   saveEscalationBtn: document.getElementById("saveEscalationBtn"),
   insightList: document.getElementById("insightList"),
@@ -85,7 +224,19 @@ const elements = {
   themeToggle: document.getElementById("themeToggle"),
   statusText: document.getElementById("statusText"),
   toast: document.getElementById("toast"),
-  subTitle: document.getElementById("subTitle")
+  subTitle: document.getElementById("subTitle"),
+  csvInput: document.getElementById("csvInput"),
+  autoRefreshBtn: document.getElementById("autoRefreshBtn"),
+  syncMeta: document.getElementById("syncMeta"),
+  slaRiskList: document.getElementById("slaRiskList"),
+  trendChart: document.getElementById("trendChart"),
+  scheduleFrequency: document.getElementById("scheduleFrequency"),
+  scheduleEmail: document.getElementById("scheduleEmail"),
+  saveScheduleBtn: document.getElementById("saveScheduleBtn"),
+  auditTrailList: document.getElementById("auditTrailList"),
+  ticketDrawer: document.getElementById("ticketDrawer"),
+  closeDrawerBtn: document.getElementById("closeDrawerBtn"),
+  drawerContent: document.getElementById("drawerContent")
 };
 
 function setThemeButtonLabel(isDarkMode) {
@@ -109,6 +260,24 @@ function showToast(message) {
   elements.toast.textContent = message;
   elements.toast.classList.add("show");
   window.setTimeout(() => elements.toast.classList.remove("show"), 1500);
+}
+
+function addAudit(action) {
+  const stamp = new Date().toLocaleString();
+  auditTrail.unshift(`${stamp} - ${action}`);
+  auditTrail = auditTrail.slice(0, 12);
+  renderAuditTrail();
+}
+
+function parseSlaToMinutes(slaText) {
+  if (!slaText || slaText === "N/A") {
+    return Number.POSITIVE_INFINITY;
+  }
+  const match = slaText.match(/(\d+)h\s*(\d+)m/);
+  if (!match) {
+    return Number.POSITIVE_INFINITY;
+  }
+  return Number(match[1]) * 60 + Number(match[2]);
 }
 
 function filteredReviews() {
@@ -138,7 +307,7 @@ function renderKpis() {
 
   elements.kpis.innerHTML = [
     { label: `Reviews Ingested (${state.timeRange}d)`, value: ingested.toLocaleString(), delta: "+14.2% vs prior period", type: "good" },
-    { label: "Auto-Categorized", value: `${categorized.toFixed(1)}%`, delta: "Model confidence stable", type: "good" },
+    { label: "AI Categorization Confidence", value: `${categorized.toFixed(1)}%`, delta: "Model confidence stable", type: "good" },
     { label: "Critical Reviews", value: critical.toLocaleString(), delta: "Needs resolution under 24h", type: "warn" },
     { label: "Avg Response TAT", value: `${avgTat}h`, delta: "-1.1h improved", type: "good" }
   ]
@@ -184,6 +353,28 @@ function severityTagClass(severity) {
   return "t-opportunity";
 }
 
+function renderSlaRiskList() {
+  const risks = filteredReviews()
+    .filter((item) => parseSlaToMinutes(item.sla) <= 360)
+    .sort((a, b) => parseSlaToMinutes(a.sla) - parseSlaToMinutes(b.sla))
+    .slice(0, 4);
+
+  if (!risks.length) {
+    elements.slaRiskList.innerHTML = "<p class='mini'>No near-breach tickets under current filters.</p>";
+    return;
+  }
+
+  elements.slaRiskList.innerHTML = risks
+    .map(
+      (item) => `
+      <div class="risk-item">
+        <span>#${item.id} | ${item.severity}</span>
+        <strong>${item.sla}</strong>
+      </div>`
+    )
+    .join("");
+}
+
 function renderQueue() {
   const queueData = filteredReviews().filter((item) => item.rating <= 2 && item.severity !== "Low");
   const themed = activeTheme ? queueData.filter((item) => item.issue === activeTheme) : queueData;
@@ -199,8 +390,9 @@ function renderQueue() {
       <div class="ticket" data-id="${item.id}">
         <div class="head"><b>#${item.id}</b><span class="tag ${severityTagClass(item.severity)}">${item.severity}</span></div>
         <div>"${item.text}"</div>
-        <small>${item.platform} | SKU: ${item.sku} | SLA left: ${item.sla}</small>
+        <small>${item.platform} | SKU: ${item.sku} | SLA left: ${item.sla} | AI ${item.confidence}%</small>
         <div class="ticket-actions">
+          <button type="button" data-action="view" data-id="${item.id}">View</button>
           <button type="button" data-action="resolve" data-id="${item.id}">Resolve</button>
           <button type="button" data-action="template" data-issue="${item.issue}">Use Template</button>
         </div>
@@ -252,17 +444,30 @@ function renderInboxTable() {
     .map(
       (item) => `
       <tr>
-        <td>#${item.id}</td>
+        <td><input type="checkbox" class="inbox-select" data-id="${item.id}" ${selectedInboxIds.has(item.id) ? "checked" : ""} /></td>
+        <td><button type="button" class="link-btn" data-action="view" data-id="${item.id}">#${item.id}</button></td>
         <td>${item.platform}</td>
         <td>${item.rating}</td>
         <td>${item.issue}</td>
         <td>${item.sku}</td>
+        <td>
+          <select class="status-select" data-id="${item.id}">
+            <option value="Open" ${item.status === "Open" ? "selected" : ""}>Open</option>
+            <option value="In Progress" ${item.status === "In Progress" ? "selected" : ""}>In Progress</option>
+            <option value="Resolved" ${item.status === "Resolved" ? "selected" : ""}>Resolved</option>
+          </select>
+        </td>
+        <td>
+          <select class="assignee-select" data-id="${item.id}">
+            ${assignees.map((name) => `<option value="${name}" ${item.assignee === name ? "selected" : ""}>${name}</option>`).join("")}
+          </select>
+        </td>
       </tr>`
     )
     .join("");
 
   if (!rows.length) {
-    elements.inboxTable.innerHTML = "<tr><td colspan='5'>No matching reviews found.</td></tr>";
+    elements.inboxTable.innerHTML = "<tr><td colspan='8'>No matching reviews found.</td></tr>";
   }
 }
 
@@ -307,6 +512,52 @@ function renderClusters() {
     .join("");
 }
 
+function runQualityChecks() {
+  const text = elements.responseStudioEditor.value.trim();
+  const checks = [
+    {
+      label: "Minimum length (40 chars)",
+      pass: text.length >= 40
+    },
+    {
+      label: "Empathy statement included",
+      pass: /sorry|apolog|thank/i.test(text)
+    },
+    {
+      label: "No harsh language",
+      pass: !/fault|blame|cannot help/i.test(text)
+    },
+    {
+      label: "Contains clear next action",
+      pass: /replace|exchange|refund|escalat|assist/i.test(text)
+    }
+  ];
+
+  elements.qualityCheckList.innerHTML = checks
+    .map((item) => `<li>${item.pass ? "PASS" : "FAIL"} - ${item.label}</li>`)
+    .join("");
+}
+
+function renderTrendChart() {
+  const seed = filteredReviews().length + state.timeRange;
+  const days = ["W1", "W2", "W3", "W4", "W5", "W6", "W7", "W8", "W9", "W10"];
+
+  elements.trendChart.innerHTML = days
+    .map((label, idx) => {
+      const volume = 28 + ((seed + idx * 9) % 56);
+      const negative = 10 + ((seed + idx * 6) % 24);
+      return `
+      <div class="bar-col">
+        <div class="bar-stack">
+          <div class="bar-volume" style="height:${volume}px"></div>
+          <div class="bar-negative" style="height:${negative}px"></div>
+        </div>
+        <span class="bar-label">${label}</span>
+      </div>`;
+    })
+    .join("");
+}
+
 function renderInsights() {
   const list = filteredReviews();
   const negatives = list.filter((item) => item.sentiment === "Negative").length;
@@ -327,9 +578,18 @@ function renderInsights() {
   elements.insightList.innerHTML = insights.map((item) => `<li>${item}</li>`).join("");
 }
 
+function renderAuditTrail() {
+  if (!auditTrail.length) {
+    elements.auditTrailList.innerHTML = "<li>No actions yet. Start using controls to generate audit records.</li>";
+    return;
+  }
+  elements.auditTrailList.innerHTML = auditTrail.map((item) => `<li>${item}</li>`).join("");
+}
+
 function setStatusText() {
   const scope = state.platform === "all" ? "All Platforms" : state.platform;
-  elements.statusText.textContent = `Active Scope: ${scope} | Time Window: ${state.timeRange} days | Queue size: ${filteredReviews().length}`;
+  const schedule = localStorage.getItem("sellergrid-schedule") || "Not set";
+  elements.statusText.textContent = `Active Scope: ${scope} | Time Window: ${state.timeRange} days | Queue size: ${filteredReviews().length} | Report: ${schedule}`;
 }
 
 function switchView(view) {
@@ -342,20 +602,23 @@ function switchView(view) {
   });
 
   elements.subTitle.textContent = viewMeta[view] || viewMeta.overview;
-
   showToast(`Switched to ${view}`);
 }
 
 function renderAll() {
   renderKpis();
   renderPlatformSnapshot();
+  renderSlaRiskList();
   renderQueue();
   renderThemeChips();
   renderTemplateList();
   renderInboxTable();
   renderSentiment();
   renderClusters();
+  renderTrendChart();
   renderInsights();
+  runQualityChecks();
+  renderAuditTrail();
   setStatusText();
 }
 
@@ -381,7 +644,8 @@ function exportInsights() {
       timeRange: state.timeRange
     },
     queue: filteredReviews().filter((item) => item.rating <= 2),
-    insights: Array.from(elements.insightList.querySelectorAll("li")).map((li) => li.textContent)
+    insights: Array.from(elements.insightList.querySelectorAll("li")).map((li) => li.textContent),
+    schedule: localStorage.getItem("sellergrid-schedule") || "Not set"
   };
 
   const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
@@ -391,7 +655,157 @@ function exportInsights() {
   anchor.download = "sellergrid-weekly-insights.json";
   anchor.click();
   URL.revokeObjectURL(url);
+  addAudit("Exported weekly insights JSON");
   showToast("Weekly insights exported");
+}
+
+function openDrawerById(id) {
+  const ticket = reviews.find((item) => item.id === id);
+  if (!ticket) {
+    return;
+  }
+
+  elements.drawerContent.innerHTML = `
+    <div class="detail-box"><b>Ticket</b><div>#${ticket.id}</div></div>
+    <div class="detail-box"><b>Customer Voice</b><div>${ticket.text}</div></div>
+    <div class="detail-box"><b>Metadata</b><div>${ticket.platform} | SKU ${ticket.sku} | Rating ${ticket.rating}</div></div>
+    <div class="detail-box"><b>Workflow</b><div>Status: ${ticket.status} | Assignee: ${ticket.assignee}</div></div>
+    <div class="detail-box"><b>AI Classification</b><div>Issue: ${ticket.issue} | Sentiment: ${ticket.sentiment} | Confidence: ${ticket.confidence}%</div></div>
+    <div class="detail-box"><b>SLA</b><div>${ticket.sla}</div></div>
+  `;
+
+  elements.ticketDrawer.classList.add("open");
+  elements.ticketDrawer.setAttribute("aria-hidden", "false");
+}
+
+function closeDrawer() {
+  elements.ticketDrawer.classList.remove("open");
+  elements.ticketDrawer.setAttribute("aria-hidden", "true");
+}
+
+function refreshSyncMeta() {
+  elements.syncMeta.textContent = `Last sync: ${new Date().toLocaleString()}`;
+}
+
+function simulateIncrementalReview() {
+  const id = `RV-${Math.floor(34000 + Math.random() * 999)}`;
+  const sample = {
+    id,
+    platform: platforms[Math.floor(Math.random() * platforms.length)],
+    rating: Math.max(1, Math.ceil(Math.random() * 5 - 0.6)),
+    issue: ["Packaging Damage", "Late Delivery", "Size / Fit Issue", "Color Mismatch"][Math.floor(Math.random() * 4)],
+    text: "Auto-synced review sample from integration stream",
+    sku: ["SNK-441", "TSH-108", "MIX-904", "BOT-305"][Math.floor(Math.random() * 4)],
+    severity: ["Critical", "Product Gap", "Win-Back"][Math.floor(Math.random() * 3)],
+    sla: `${2 + Math.floor(Math.random() * 10)}h ${String(Math.floor(Math.random() * 59)).padStart(2, "0")}m`,
+    sentiment: ["Negative", "Neutral", "Positive"][Math.floor(Math.random() * 3)],
+    assignee: "Unassigned",
+    status: "Open",
+    confidence: 78 + Math.floor(Math.random() * 20)
+  };
+  reviews.unshift(sample);
+  reviews = reviews.slice(0, 40);
+}
+
+function startAutoRefresh() {
+  if (autoRefreshTimer) {
+    window.clearInterval(autoRefreshTimer);
+    autoRefreshTimer = null;
+    elements.autoRefreshBtn.textContent = "Start Auto Refresh";
+    addAudit("Stopped auto refresh");
+    showToast("Auto refresh stopped");
+    return;
+  }
+
+  autoRefreshTimer = window.setInterval(() => {
+    simulateIncrementalReview();
+    refreshSyncMeta();
+    renderAll();
+  }, 10000);
+
+  elements.autoRefreshBtn.textContent = "Stop Auto Refresh";
+  addAudit("Started auto refresh (10s interval)");
+  showToast("Auto refresh started");
+}
+
+function parseCsv(fileText) {
+  const lines = fileText
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter(Boolean);
+
+  if (lines.length < 2) {
+    return [];
+  }
+
+  const headers = lines[0].split(",").map((h) => h.trim().toLowerCase());
+  const index = (name) => headers.indexOf(name);
+
+  return lines.slice(1).map((line, rowIndex) => {
+    const cols = line.split(",").map((c) => c.trim());
+    const rating = Number(cols[index("rating")]);
+
+    return {
+      id: cols[index("id")] || `CSV-${rowIndex + 1}`,
+      platform: cols[index("platform")] || "Amazon",
+      rating: Number.isFinite(rating) && rating >= 1 ? rating : 3,
+      issue: cols[index("issue")] || "General",
+      text: cols[index("text")] || "Imported review",
+      sku: cols[index("sku")] || "UNK-000",
+      severity: cols[index("severity")] || "Win-Back",
+      sla: cols[index("sla")] || "8h 00m",
+      sentiment: cols[index("sentiment")] || "Neutral",
+      assignee: cols[index("assignee")] || "Unassigned",
+      status: cols[index("status")] || "Open",
+      confidence: Number(cols[index("confidence")]) || 80
+    };
+  });
+}
+
+function saveSchedule() {
+  const value = `${elements.scheduleFrequency.value} -> ${elements.scheduleEmail.value}`;
+  localStorage.setItem("sellergrid-schedule", value);
+  addAudit(`Saved report schedule (${value})`);
+  showToast("Report schedule saved");
+  setStatusText();
+}
+
+function applyBulkResolve() {
+  if (!selectedInboxIds.size) {
+    showToast("Select at least one ticket");
+    return;
+  }
+
+  reviews = reviews.map((item) => {
+    if (selectedInboxIds.has(item.id)) {
+      return { ...item, status: "Resolved" };
+    }
+    return item;
+  });
+
+  addAudit(`Bulk resolved ${selectedInboxIds.size} tickets`);
+  selectedInboxIds = new Set();
+  elements.selectAllInbox.checked = false;
+  renderAll();
+  showToast("Bulk resolve completed");
+}
+
+function applyBulkAssign() {
+  if (!selectedInboxIds.size) {
+    showToast("Select at least one ticket");
+    return;
+  }
+
+  reviews = reviews.map((item) => {
+    if (selectedInboxIds.has(item.id)) {
+      return { ...item, assignee: "Support Team", status: item.status === "Resolved" ? "Resolved" : "In Progress" };
+    }
+    return item;
+  });
+
+  addAudit(`Bulk assigned ${selectedInboxIds.size} tickets to Support Team`);
+  renderAll();
+  showToast("Bulk assign completed");
 }
 
 function bindEvents() {
@@ -428,7 +842,8 @@ function bindEvents() {
     const action = button.dataset.action;
     if (action === "resolve") {
       const id = button.dataset.id;
-      reviews = reviews.filter((item) => item.id !== id);
+      reviews = reviews.map((item) => (item.id === id ? { ...item, status: "Resolved" } : item));
+      addAudit(`Resolved ticket #${id}`);
       showToast(`Ticket #${id} resolved`);
       renderAll();
       return;
@@ -440,7 +855,14 @@ function bindEvents() {
       switchView("response");
       elements.templateSelect.value = issue in templates ? issue : elements.templateSelect.value;
       elements.responseStudioEditor.value = elements.replyEditor.value;
+      runQualityChecks();
+      addAudit(`Loaded template for ${issue}`);
       showToast("Template loaded in Response Studio");
+      return;
+    }
+
+    if (action === "view") {
+      openDrawerById(button.dataset.id);
     }
   });
 
@@ -452,6 +874,7 @@ function bindEvents() {
 
     const name = button.dataset.template;
     elements.replyEditor.value = templates[name];
+    addAudit(`Applied quick template: ${name}`);
     showToast(`${name} template applied`);
   });
 
@@ -471,16 +894,72 @@ function bindEvents() {
     renderInboxTable();
   });
 
+  elements.selectAllInbox.addEventListener("change", (event) => {
+    const checkboxes = elements.inboxTable.querySelectorAll(".inbox-select");
+    selectedInboxIds = new Set();
+    checkboxes.forEach((node) => {
+      node.checked = event.target.checked;
+      if (event.target.checked) {
+        selectedInboxIds.add(node.dataset.id);
+      }
+    });
+  });
+
+  elements.inboxTable.addEventListener("change", (event) => {
+    const target = event.target;
+
+    if (target.classList.contains("inbox-select")) {
+      if (target.checked) {
+        selectedInboxIds.add(target.dataset.id);
+      } else {
+        selectedInboxIds.delete(target.dataset.id);
+      }
+      return;
+    }
+
+    if (target.classList.contains("status-select")) {
+      reviews = reviews.map((item) => (item.id === target.dataset.id ? { ...item, status: target.value } : item));
+      addAudit(`Updated status for #${target.dataset.id} to ${target.value}`);
+      return;
+    }
+
+    if (target.classList.contains("assignee-select")) {
+      reviews = reviews.map((item) => (item.id === target.dataset.id ? { ...item, assignee: target.value } : item));
+      addAudit(`Assigned #${target.dataset.id} to ${target.value}`);
+    }
+  });
+
+  elements.inboxTable.addEventListener("click", (event) => {
+    const button = event.target.closest("button[data-action='view']");
+    if (!button) {
+      return;
+    }
+    openDrawerById(button.dataset.id);
+  });
+
+  elements.bulkAssignBtn.addEventListener("click", applyBulkAssign);
+  elements.bulkResolveBtn.addEventListener("click", applyBulkResolve);
+
   elements.applyTemplateBtn.addEventListener("click", () => {
     const selected = elements.templateSelect.value;
     elements.responseStudioEditor.value = templates[selected] || "";
+    runQualityChecks();
+    addAudit(`Applied studio template: ${selected}`);
     showToast("Template applied");
   });
 
   elements.copyStudioBtn.addEventListener("click", () => copyToClipboard(elements.responseStudioEditor.value));
+  elements.responseStudioEditor.addEventListener("input", runQualityChecks);
 
-  elements.saveRoutingBtn.addEventListener("click", () => showToast("Routing rules saved"));
-  elements.saveEscalationBtn.addEventListener("click", () => showToast("Escalation rules saved"));
+  elements.saveRoutingBtn.addEventListener("click", () => {
+    addAudit("Saved routing rules");
+    showToast("Routing rules saved");
+  });
+
+  elements.saveEscalationBtn.addEventListener("click", () => {
+    addAudit("Saved escalation rules");
+    showToast("Escalation rules saved");
+  });
 
   elements.themeToggle.addEventListener("click", () => {
     const isDarkMode = !document.body.classList.contains("dark-mode");
@@ -489,8 +968,56 @@ function bindEvents() {
   });
 
   elements.exportBtn.addEventListener("click", exportInsights);
+  elements.autoRefreshBtn.addEventListener("click", startAutoRefresh);
+
+  elements.csvInput.addEventListener("change", async (event) => {
+    const file = event.target.files && event.target.files[0];
+    if (!file) {
+      return;
+    }
+
+    const content = await file.text();
+    const parsed = parseCsv(content);
+    if (!parsed.length) {
+      showToast("CSV import failed or empty");
+      return;
+    }
+
+    reviews = [...parsed, ...reviews].slice(0, 80);
+    refreshSyncMeta();
+    addAudit(`Imported ${parsed.length} reviews from CSV`);
+    renderAll();
+    showToast(`Imported ${parsed.length} rows`);
+  });
+
+  elements.saveScheduleBtn.addEventListener("click", saveSchedule);
+
+  elements.closeDrawerBtn.addEventListener("click", closeDrawer);
+  elements.ticketDrawer.addEventListener("click", (event) => {
+    if (event.target === elements.ticketDrawer) {
+      closeDrawer();
+    }
+  });
+}
+
+function bootstrapSchedule() {
+  const schedule = localStorage.getItem("sellergrid-schedule");
+  if (!schedule) {
+    return;
+  }
+
+  const parts = schedule.split("->").map((p) => p.trim());
+  if (parts[0]) {
+    elements.scheduleFrequency.value = parts[0];
+  }
+  if (parts[1]) {
+    elements.scheduleEmail.value = parts[1];
+  }
 }
 
 bindEvents();
 initTheme();
+bootstrapSchedule();
+refreshSyncMeta();
+addAudit("Dashboard initialized");
 renderAll();

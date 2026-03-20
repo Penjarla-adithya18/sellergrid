@@ -88,6 +88,23 @@
 
               <div class="kpis" id="kpis"></div>
 
+              <div class="ops-strip">
+                <article class="card compact">
+                  <h3>Data Ingestion</h3>
+                  <p class="sub">Import CSV and sync refresh state</p>
+                  <div class="inline-actions">
+                    <input id="csvInput" type="file" accept=".csv" />
+                    <button id="autoRefreshBtn" class="secondary" type="button">Start Auto Refresh</button>
+                  </div>
+                  <p class="mini" id="syncMeta">Last sync: Not synced yet</p>
+                </article>
+                <article class="card compact">
+                  <h3>SLA Risk Alerts</h3>
+                  <p class="sub">Tickets close to breach</p>
+                  <div id="slaRiskList"></div>
+                </article>
+              </div>
+
               <div class="grid">
                 <article class="card">
                   <h3>Platform Volume Snapshot</h3>
@@ -120,6 +137,12 @@
                   </div>
                 </article>
               </div>
+
+              <article class="card">
+                <h3>Weekly Trend Analytics</h3>
+                <p class="sub">Mock time-series for review volume and negative sentiment</p>
+                <div class="trend-chart" id="trendChart"></div>
+              </article>
             </section>
 
             <section class="view" id="view-inbox">
@@ -134,6 +157,10 @@
                 <h3>All Incoming Reviews</h3>
                 <p class="sub">Search and filter all incoming reviews</p>
                 <div class="filters">
+                  <label class="check-cell">
+                    Bulk
+                    <input id="selectAllInbox" type="checkbox" />
+                  </label>
                   <label>
                     Search
                     <input id="inboxSearch" type="text" placeholder="Search by text, SKU or ticket id" />
@@ -154,15 +181,22 @@
                   <table>
                     <thead>
                       <tr>
+                        <th></th>
                         <th>Ticket</th>
                         <th>Platform</th>
                         <th>Rating</th>
                         <th>Issue</th>
                         <th>SKU</th>
+                        <th>Status</th>
+                        <th>Assignee</th>
                       </tr>
                     </thead>
                     <tbody id="inboxTable"></tbody>
                   </table>
+                </div>
+                <div class="inline-actions">
+                  <button id="bulkAssignBtn" class="secondary" type="button">Bulk Assign</button>
+                  <button id="bulkResolveBtn" class="secondary" type="button">Bulk Resolve</button>
                 </div>
               </article>
             </section>
@@ -217,6 +251,10 @@
                   <button id="applyTemplateBtn" class="secondary" type="button">Apply Template</button>
                   <button id="copyStudioBtn" class="secondary" type="button">Copy Text</button>
                 </div>
+                <article class="quality-panel">
+                  <h4>Response Quality Check</h4>
+                  <ul id="qualityCheckList"></ul>
+                </article>
               </article>
             </section>
 
@@ -272,6 +310,29 @@
                 <h3>Decision Highlights</h3>
                 <p class="sub">Key operational summary generated from current data</p>
                 <ul id="insightList"></ul>
+                <div class="split slim">
+                  <article class="card nested">
+                    <h3>Scheduled Report</h3>
+                    <label>
+                      Send Every
+                      <select id="scheduleFrequency">
+                        <option value="weekly">Weekly</option>
+                        <option value="bi-weekly">Bi-Weekly</option>
+                        <option value="monthly">Monthly</option>
+                      </select>
+                    </label>
+                    <label>
+                      Recipient
+                      <input id="scheduleEmail" type="email" value="admin@sellergrid.in" />
+                    </label>
+                    <button id="saveScheduleBtn" class="secondary" type="button">Save Schedule</button>
+                  </article>
+                  <article class="card nested">
+                    <h3>Audit Trail</h3>
+                    <p class="sub">Recent workflow actions</p>
+                    <ul id="auditTrailList"></ul>
+                  </article>
+                </div>
               </article>
             </section>
 
@@ -280,6 +341,16 @@
         </div>
       </div>
     </div>
+
+    <aside id="ticketDrawer" class="drawer" aria-hidden="true">
+      <div class="drawer-panel">
+        <div class="drawer-head">
+          <h3>Ticket Details</h3>
+          <button id="closeDrawerBtn" class="secondary" type="button">Close</button>
+        </div>
+        <div id="drawerContent" class="drawer-content"></div>
+      </div>
+    </aside>
 
     <script src="app.js"></script>
   </body>
