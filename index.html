@@ -1,0 +1,285 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SellerGrid Review Intelligence Hub</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="canvas">
+      <div class="shell">
+        <header class="topbar">
+          <div class="brand">
+            <div class="logo">SG</div>
+            <div>
+              <h1>SellerGrid Review Intelligence Hub</h1>
+              <p id="subTitle">Operational dashboard for high-volume multi-platform reviews</p>
+            </div>
+          </div>
+          <div class="actions">
+            <div class="pill">Workspace: CleverBooks/SellerGrid Demo</div>
+            <button id="exportBtn" class="cta" type="button">Export Weekly Insight</button>
+          </div>
+        </header>
+
+        <div class="main">
+          <aside class="sidebar">
+            <div class="nav-section">
+              <p class="nav-title">COMMAND CENTER</p>
+              <button class="nav-item active" data-view="overview" type="button">Overview</button>
+              <button class="nav-item" data-view="inbox" type="button">Review Inbox</button>
+              <button class="nav-item" data-view="sentiment" type="button">Sentiment Radar</button>
+              <button class="nav-item" data-view="clusters" type="button">Issue Clusters</button>
+              <button class="nav-item" data-view="response" type="button">Response Studio</button>
+            </div>
+            <div class="nav-section">
+              <p class="nav-title">AUTOMATIONS</p>
+              <button class="nav-item" data-view="routing" type="button">Smart Routing</button>
+              <button class="nav-item" data-view="escalation" type="button">Escalation Rules</button>
+              <button class="nav-item" data-view="insights" type="button">Monthly Insights</button>
+            </div>
+          </aside>
+
+          <section class="content">
+            <div id="toast" class="toast" aria-live="polite"></div>
+
+            <section class="view active" id="view-overview">
+              <div class="view-header">
+                <div>
+                  <p class="eyebrow">Dashboard</p>
+                  <h2>Operations Overview</h2>
+                </div>
+                <span class="view-badge">Live Monitoring</span>
+              </div>
+              <div class="hero">
+                <h3>One place to process 1000s of customer reviews every month</h3>
+                <p>
+                  Monitor cross-platform inflow, identify complaint patterns, prioritize urgent cases,
+                  and draft smart responses from one dashboard.
+                </p>
+                <div class="filters">
+                  <label>
+                    Platform
+                    <select id="platformFilter">
+                      <option value="all">All</option>
+                      <option value="Amazon">Amazon</option>
+                      <option value="Flipkart">Flipkart</option>
+                      <option value="Myntra">Myntra</option>
+                    </select>
+                  </label>
+                  <label>
+                    Time Range
+                    <select id="timeRange">
+                      <option value="7">Last 7 Days</option>
+                      <option value="30" selected>Last 30 Days</option>
+                      <option value="90">Last 90 Days</option>
+                    </select>
+                  </label>
+                </div>
+              </div>
+
+              <div class="kpis" id="kpis"></div>
+
+              <div class="grid">
+                <article class="card">
+                  <h3>Platform Volume Snapshot</h3>
+                  <p class="sub">Where reviews are coming from</p>
+                  <div class="platform-list" id="platformList"></div>
+                </article>
+
+                <article class="card">
+                  <h3>Urgent Review Queue</h3>
+                  <p class="sub">AI-prioritized negative reviews to handle first</p>
+                  <div class="queue" id="queueList"></div>
+                </article>
+              </div>
+
+              <div class="split">
+                <article class="card">
+                  <h3>Top Complaint Themes</h3>
+                  <p class="sub">Click a theme to filter urgent queue</p>
+                  <div class="chips" id="themeChips"></div>
+                </article>
+
+                <article class="card">
+                  <h3>Quick Compose</h3>
+                  <p class="sub">Generate and use response templates with one click</p>
+                  <div id="templateList"></div>
+                  <textarea id="replyEditor" rows="4" placeholder="Select a template from queue or template list"></textarea>
+                  <div class="inline-actions">
+                    <button id="copyReplyBtn" type="button" class="secondary">Copy Reply</button>
+                    <button id="clearReplyBtn" type="button" class="secondary">Clear</button>
+                  </div>
+                </article>
+              </div>
+            </section>
+
+            <section class="view" id="view-inbox">
+              <div class="view-header">
+                <div>
+                  <p class="eyebrow">Queue Management</p>
+                  <h2>Review Inbox</h2>
+                </div>
+                <span class="view-badge">Search + Triaging</span>
+              </div>
+              <article class="card">
+                <h3>All Incoming Reviews</h3>
+                <p class="sub">Search and filter all incoming reviews</p>
+                <div class="filters">
+                  <label>
+                    Search
+                    <input id="inboxSearch" type="text" placeholder="Search by text, SKU or ticket id" />
+                  </label>
+                  <label>
+                    Rating
+                    <select id="inboxRating">
+                      <option value="all">All</option>
+                      <option value="1">1 Star</option>
+                      <option value="2">2 Star</option>
+                      <option value="3">3 Star</option>
+                      <option value="4">4 Star</option>
+                      <option value="5">5 Star</option>
+                    </select>
+                  </label>
+                </div>
+                <div class="table-wrap">
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>Ticket</th>
+                        <th>Platform</th>
+                        <th>Rating</th>
+                        <th>Issue</th>
+                        <th>SKU</th>
+                      </tr>
+                    </thead>
+                    <tbody id="inboxTable"></tbody>
+                  </table>
+                </div>
+              </article>
+            </section>
+
+            <section class="view" id="view-sentiment">
+              <div class="view-header">
+                <div>
+                  <p class="eyebrow">Analytics</p>
+                  <h2>Sentiment Radar</h2>
+                </div>
+                <span class="view-badge">Real-Time Split</span>
+              </div>
+              <article class="card">
+                <h3>Sentiment Distribution</h3>
+                <p class="sub">Real-time sentiment split by current filters</p>
+                <div class="sentiment-bars" id="sentimentBars"></div>
+              </article>
+            </section>
+
+            <section class="view" id="view-clusters">
+              <div class="view-header">
+                <div>
+                  <p class="eyebrow">Insights</p>
+                  <h2>Issue Clusters</h2>
+                </div>
+                <span class="view-badge">Ownership Mapping</span>
+              </div>
+              <article class="card">
+                <h3>Cluster Assignment Board</h3>
+                <p class="sub">Assign owners to complaint clusters</p>
+                <div id="clusterList"></div>
+              </article>
+            </section>
+
+            <section class="view" id="view-response">
+              <div class="view-header">
+                <div>
+                  <p class="eyebrow">Communication</p>
+                  <h2>Response Studio</h2>
+                </div>
+                <span class="view-badge">Human In The Loop</span>
+              </div>
+              <article class="card">
+                <h3>Personalized Reply Builder</h3>
+                <p class="sub">Build personalized responses from templates</p>
+                <label>
+                  Pick Template
+                  <select id="templateSelect"></select>
+                </label>
+                <textarea id="responseStudioEditor" rows="6"></textarea>
+                <div class="inline-actions">
+                  <button id="applyTemplateBtn" class="secondary" type="button">Apply Template</button>
+                  <button id="copyStudioBtn" class="secondary" type="button">Copy Text</button>
+                </div>
+              </article>
+            </section>
+
+            <section class="view" id="view-routing">
+              <div class="view-header">
+                <div>
+                  <p class="eyebrow">Automation</p>
+                  <h2>Smart Routing</h2>
+                </div>
+                <span class="view-badge">Rules Engine</span>
+              </div>
+              <article class="card">
+                <h3>Auto-Assignment Logic</h3>
+                <p class="sub">Control auto-routing behavior by severity or issue type</p>
+                <div class="settings-grid">
+                  <label><input type="checkbox" id="routeCritical" checked /> Auto-route critical issues to support lead</label>
+                  <label><input type="checkbox" id="routePackaging" checked /> Route packaging damage to logistics queue</label>
+                  <label><input type="checkbox" id="routeSize" checked /> Route size/fit to product catalog team</label>
+                </div>
+                <button id="saveRoutingBtn" class="secondary" type="button">Save Routing Rules</button>
+              </article>
+            </section>
+
+            <section class="view" id="view-escalation">
+              <div class="view-header">
+                <div>
+                  <p class="eyebrow">Governance</p>
+                  <h2>Escalation Rules</h2>
+                </div>
+                <span class="view-badge">SLA Controls</span>
+              </div>
+              <article class="card">
+                <h3>SLA Threshold Configuration</h3>
+                <p class="sub">Define SLA thresholds</p>
+                <div class="settings-grid">
+                  <label>Critical SLA (hours) <input id="criticalSla" type="number" min="1" value="4" /></label>
+                  <label>Product Gap SLA (hours) <input id="productSla" type="number" min="1" value="8" /></label>
+                  <label>Win-Back SLA (hours) <input id="winBackSla" type="number" min="1" value="12" /></label>
+                </div>
+                <button id="saveEscalationBtn" class="secondary" type="button">Save Escalation Rules</button>
+              </article>
+            </section>
+
+            <section class="view" id="view-insights">
+              <div class="view-header">
+                <div>
+                  <p class="eyebrow">Executive Summary</p>
+                  <h2>Monthly Insights</h2>
+                </div>
+                <span class="view-badge">Auto Narrative</span>
+              </div>
+              <article class="card">
+                <h3>Decision Highlights</h3>
+                <p class="sub">Key operational summary generated from current data</p>
+                <ul id="insightList"></ul>
+              </article>
+            </section>
+
+            <div class="footer-note" id="statusText"></div>
+          </section>
+        </div>
+      </div>
+    </div>
+
+    <script src="app.js"></script>
+  </body>
+</html>
