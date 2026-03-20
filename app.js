@@ -82,10 +82,28 @@ const elements = {
   saveEscalationBtn: document.getElementById("saveEscalationBtn"),
   insightList: document.getElementById("insightList"),
   exportBtn: document.getElementById("exportBtn"),
+  themeToggle: document.getElementById("themeToggle"),
   statusText: document.getElementById("statusText"),
   toast: document.getElementById("toast"),
   subTitle: document.getElementById("subTitle")
 };
+
+function setThemeButtonLabel(isDarkMode) {
+  elements.themeToggle.textContent = isDarkMode ? "Bright Mode" : "Dark Mode";
+}
+
+function applyTheme(isDarkMode) {
+  document.body.classList.toggle("dark-mode", isDarkMode);
+  setThemeButtonLabel(isDarkMode);
+  localStorage.setItem("sellergrid-theme", isDarkMode ? "dark" : "bright");
+}
+
+function initTheme() {
+  const savedTheme = localStorage.getItem("sellergrid-theme");
+  const prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+  const isDarkMode = savedTheme ? savedTheme === "dark" : prefersDark;
+  applyTheme(isDarkMode);
+}
 
 function showToast(message) {
   elements.toast.textContent = message;
@@ -464,8 +482,15 @@ function bindEvents() {
   elements.saveRoutingBtn.addEventListener("click", () => showToast("Routing rules saved"));
   elements.saveEscalationBtn.addEventListener("click", () => showToast("Escalation rules saved"));
 
+  elements.themeToggle.addEventListener("click", () => {
+    const isDarkMode = !document.body.classList.contains("dark-mode");
+    applyTheme(isDarkMode);
+    showToast(isDarkMode ? "Dark mode enabled" : "Bright mode enabled");
+  });
+
   elements.exportBtn.addEventListener("click", exportInsights);
 }
 
 bindEvents();
+initTheme();
 renderAll();
